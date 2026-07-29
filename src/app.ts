@@ -1,6 +1,7 @@
 import express from 'express';
 import { errorMiddleware } from './middleware/error.middleware.js';
 import authRoutes from './routes/auth.routes.js';
+import productRoutes from './routes/product.routes.js';
 import { sendSuccess } from './utils/response.js';
 
 const app = express();
@@ -13,6 +14,7 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/auth', authRoutes);
+app.use('/products', productRoutes);
 
 app.use(errorMiddleware);
 

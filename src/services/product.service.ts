@@ -1,5 +1,5 @@
 import { prisma } from '../lib/prisma.js';
-import { redis } from '../lib/redis.js';
+import { getFromCache, invalidateCache, setCache } from '../lib/cache.js';
 import { AppError } from '../middleware/error.middleware.js';
 import type { CreateProductInput, UpdateProductInput } from '../validators/product.validation.js';
 
@@ -9,34 +9,6 @@ const CACHE_KEYS = {
   all: 'products:all',
   byId: (id: string) => `products:${id}`,
 };
-
-async function getFromCache<T>(key: string): Promise<T | null> {
-  try {
-    if (redis.status !== 'ready') return null;
-    const data = await redis.get(key);
-    return data ? JSON.parse(data) : null;
-  } catch {
-    return null;
-  }
-}
-
-async function setCache<T>(key: string, data: T): Promise<void> {
-  try {
-    if (redis.status !== 'ready') return;
-    await redis.setex(key, CACHE_TTL, JSON.stringify(data));
-  } catch {
-    // silently fail
-  }
-}
-
-async function invalidateCache(...keys: string[]): Promise<void> {
-  try {
-    if (redis.status !== 'ready') return;
-    await redis.del(...keys);
-  } catch {
-    // silently fail
-  }
-}
 
 export const createProduct = async (input: CreateProductInput, userId: string) => {
   const product = await prisma.product.create({
@@ -48,26 +20,32 @@ export const createProduct = async (input: CreateProductInput, userId: string) =
 
 export const getAllProducts = async () => {
   const cached = await getFromCache<any[]>(CACHE_KEYS.all);
-  if (cached) return cached;
+  if (cached) {
+    return cached.data;
+  }
+  console.log('Cache Miss');
 
   const products = await prisma.product.findMany({
     where: { isActive: true },
     orderBy: { createdAt: 'desc' },
   });
 
-  await setCache(CACHE_KEYS.all, products);
+  await setCache(CACHE_KEYS.all, products, CACHE_TTL);
   return products;
 };
 
 export const getProductById = async (id: string) => {
   const cacheKey = CACHE_KEYS.byId(id);
   const cached = await getFromCache<any>(cacheKey);
-  if (cached) return cached;
+  if (cached) {
+    return cached.data;
+  }
+  console.log('Cache Miss');
 
   const product = await prisma.product.findUnique({ where: { id } });
   if (!product) throw new AppError(404, 'Product not found');
 
-  await setCache(cacheKey, product);
+  await setCache(cacheKey, product, CACHE_TTL);
   return product;
 };
 

@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma.js';
 import { AppError } from '../middleware/error.middleware.js';
+import type { UserRole } from '../types/index.js';
 import type { CreateOrderInput, UpdateOrderStatusInput } from '../validators/order.validation.js';
 
 export const createOrder = async (input: CreateOrderInput, userId: string) => {
@@ -67,7 +68,7 @@ export const getMyOrders = async (userId: string) => {
   return orders;
 };
 
-export const getOrderById = async (id: string, userId: string, role: string) => {
+export const getOrderById = async (id: string, userId: string, role: UserRole) => {
   const order = await prisma.order.findUnique({
     where: { id },
     include: {
@@ -91,9 +92,6 @@ export const getOrderById = async (id: string, userId: string, role: string) => 
 };
 
 export const updateOrderStatus = async (id: string, input: UpdateOrderStatusInput) => {
-  const existing = await prisma.order.findUnique({ where: { id } });
-  if (!existing) throw new AppError(404, 'Order not found');
-
   const order = await prisma.order.update({
     where: { id },
     data: { status: input.status },

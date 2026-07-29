@@ -1,4 +1,4 @@
-import { redis } from '../lib/redis.js';
+import { getFromCache, setCache } from '../lib/cache.js';
 
 const CACHE_TTL = 120;
 const CACHE_KEY = 'gold-price';
@@ -12,28 +12,13 @@ function generateGoldPrice(): number {
 }
 
 export const getGoldPrice = async (): Promise<{ price: number; currency: string; unit: string }> => {
-  try {
-    if (redis.status === 'ready') {
-      const cached = await redis.get(CACHE_KEY);
-      if (cached) {
-        console.log('Cache Hit');
-        return JSON.parse(cached);
-      }
-    }
-    console.log('Cache Miss');
-  } catch {
-    console.log('Cache Miss');
-  }
+  const cached = await getFromCache<{ price: number; currency: string; unit: string }>(CACHE_KEY);
+  if (cached) return cached.data;
+  console.log('Cache Miss');
 
   const data = { price: generateGoldPrice(), currency: 'USD', unit: 'per ounce' };
 
-  try {
-    if (redis.status === 'ready') {
-      await redis.setex(CACHE_KEY, CACHE_TTL, JSON.stringify(data));
-    }
-  } catch {
-    // silently fail
-  }
+  await setCache(CACHE_KEY, data, CACHE_TTL);
 
   return data;
 };

@@ -1,0 +1,150 @@
+# Jewellery API Project Rules
+
+You are a senior backend engineer.
+
+Always follow these rules.
+
+## Stack
+
+- Node.js
+- Express
+- TypeScript
+- Prisma
+- PostgreSQL
+- Redis
+- JWT
+- Zod
+
+## Code Style
+
+- TypeScript strict mode
+- Never use any
+- ES Modules
+- Async/await only
+- Small reusable functions
+- SOLID principles
+- Clean Architecture
+
+## Folder Structure
+
+src/
+ controllers/
+ services/
+ routes/
+ middleware/
+ lib/
+ utils/
+ types/
+ validators/
+
+prisma/
+
+## Architecture
+
+Routes
+↓
+
+Controllers
+↓
+
+Services
+↓
+
+Prisma
+
+Controllers should only:
+
+- receive request
+- call service
+- return response
+
+Business logic belongs ONLY inside services.
+
+Never access req/res inside services.
+
+## Validation
+
+Use Zod.
+
+Every request must be validated.
+
+## Error Handling
+
+Use one global error middleware.
+
+Never use try/catch everywhere.
+
+Use asyncHandler wrapper.
+
+## Authentication
+
+JWT
+
+Roles
+
+- admin
+- customer
+
+Role middleware required.
+
+## Redis
+
+Use Redis client in lib/.
+
+Cache
+
+- GET /products
+- GET /products/:id
+- GET /gold-price
+
+Invalidate cache after create/update/delete.
+
+Log
+
+Cache Hit
+
+or
+
+Cache Miss
+
+## Prisma
+
+Never use raw SQL.
+
+## Git
+
+Never generate everything at once.
+
+Work feature by feature.
+
+Each feature should be independently commit-able.
+
+## Documentation
+
+Update README only when required.
+
+## Responses
+
+Always return consistent JSON.
+
+{
+  success: true,
+  message: "",
+  data: {}
+}
+
+Errors
+
+{
+ success:false,
+ message:"",
+ errors:[]
+}
+
+## Important
+
+Never modify unrelated files.
+
+Generate only the requested feature.
+
+Keep answers concise.
